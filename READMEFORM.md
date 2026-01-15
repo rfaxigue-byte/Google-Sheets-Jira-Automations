@@ -1,4 +1,3 @@
-You can keep this as a single README tab in the spreadsheet or a README.md.
 
 📊 Jira ↔ Google Sheets Test Management Automation
 
