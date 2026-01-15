@@ -1,0 +1,38 @@
+function linkifyColumnAOnly() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheets = ss.getSheets();
+
+  sheets.forEach(sheet => {
+    const name = (sheet.getName() || "").trim();
+    if (/^(README|Instructions|Config|Summary|Template|_.*)$/i.test(name)) return;
+
+    const lastRow = sheet.getLastRow();
+    if (lastRow < 2) return;
+
+    const archiveRow = getArchiveMarkerRow_(sheet);
+    const endRow = archiveRow ? archiveRow - 1 : lastRow;
+    if (endRow < 2) return;
+
+    const rangeA = sheet.getRange(2, 1, endRow - 1, 1);
+    const values = rangeA.getValues();
+    const formulas = rangeA.getFormulas();
+
+    for (let i = 0; i < values.length; i++) {
+      const rowNum = i + 2;
+
+      const existingFormula = (formulas[i][0] || "").trim();
+      if (existingFormula.toUpperCase().startsWith("=HYPERLINK(")) continue;
+
+      const cellValue = values[i][0];
+      if (!cellValue) continue;
+
+      const match = String(cellValue).match(/\b[A-Z][A-Z0-9]+-\d+\b/);
+      if (!match) continue;
+
+      const issueKey = match[0].toUpperCase();
+      const url = `${JIRA_BASE_URL}/browse/${issueKey}`;
+
+      sheet.getRange(rowNum, 1).setFormula(`=HYPERLINK("${url}","${issueKey}")`);
+    }
+  });
+}
